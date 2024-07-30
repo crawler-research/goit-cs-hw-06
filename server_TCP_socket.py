@@ -6,11 +6,14 @@ from datetime import datetime
 TCP_IP = "localhost"
 TCP_PORT = 5006
 
-# from pymongo import MongoClient
+from pymongo import MongoClient
 
-# client = MongoClient("mongodb://localhost:27017/")
-# db = client["MaksymDB"]
-# collection = db["messages"]
+URI = "mongodb://mongodb:27017"
+
+
+client = MongoClient("mongodb://localhost:27017/")
+db = client["MaksymDB"]
+collection = db["messages"]
 
 def create_message(username, message, date):
     message = {"username": username, "message": message, "date": date}
@@ -31,11 +34,22 @@ def run_server(ip, port):
             # add date
             data_dict['date'] = datetime.now().isoformat()
 
-            print("Writing to MongoDB:", data_dict)
+            client = MongoClient(URI)
+            db = client.final_home_work
 
-            # create_message(data_dict['username'], data_dict['message'], data_dict['date'])
+            try:
+                print("Writing to MongoDB:", data_dict)
+                db.messages.insert_one(data_dict)
+                sock.send('200'.encode())
 
-            sock.send('200'.encode())
+            except ValueError as e:
+                logging.error(f"Parse error: {e}")
+            except Exception as e:
+                logging.error(f"Failed to save: {e}")
+            finally:
+                client.close()
+
+
         print(f"Socket connection closed {address}")
         sock.close()
 
